@@ -3,6 +3,7 @@ import time
 import logging
 import os
 from datetime import datetime
+import daemon
 
 # Configure logging to a file
 LOG_FILE = '/var/log/ltop.log'
@@ -41,4 +42,5 @@ def monitor_system():
         logger.error(f"Error in monitor_system: {e}")
 
 if __name__ == "__main__":
-    monitor_system()
+    with daemon.DaemonContext():
+        monitor_system()

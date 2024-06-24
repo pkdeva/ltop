@@ -1,0 +1,11 @@
+[Unit]
+Description=Ltop System Resource Monitor
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 -m ltop.ltop
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target

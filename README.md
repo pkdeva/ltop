@@ -17,4 +17,16 @@ Or, by downloading this repository and running:
 
 ## Usage
 
+Start the system monitor:
+        sudo systemctl start ltop
+
+Stop the system monitor:
+        sudo systemctl stop ltop
+
+Restart the system monitor:
+        sudo systemctl restart ltop
+        
+Check the status of the system monitor:
+        sudo systemctl status ltop
+
 
