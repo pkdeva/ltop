@@ -23,7 +23,7 @@ Start the system monitor:
 
 Stop the system monitor:
 
-        sudo systemctl stop ltop
+sudo systemctl stop ltop
 
 Restart the system monitor:
 
