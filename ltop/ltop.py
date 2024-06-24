@@ -5,11 +5,11 @@ import os
 from datetime import datetime
 
 # Configure logging to a file
-LOG_FILE = '/var/log/xtop.log'
+LOG_FILE = '/var/log/ltop.log'
 logging.basicConfig(
     filename=LOG_FILE,
     level=logging.DEBUG,
-    format='%(asctime)s xtop: [%(levelname)s] %(message)s',
+    format='%(asctime)s ltop: [%(levelname)s] %(message)s',
     datefmt='%b %d %H:%M:%S'
 )
 
@@ -29,7 +29,7 @@ def log_top_processes():
             logger.error(f"Error retrieving process info: {e}")
 
 def monitor_system():
-    logger.info("Starting xtop system resource monitor")
+    logger.info("Starting ltop system resource monitor")
     try:
         while True:
             cpu_percent = psutil.cpu_percent(interval=1)
@@ -42,4 +42,3 @@ def monitor_system():
 
 if __name__ == "__main__":
     monitor_system()
-

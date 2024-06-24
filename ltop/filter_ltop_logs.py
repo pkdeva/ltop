@@ -4,8 +4,8 @@ from datetime import datetime
 LOG_FILE = '/var/log/syslog'
 
 def filter_logs(cpu_threshold=0, mem_threshold=0):
-    pattern = re.compile(r'xtop: \[INFO\] Resource spike detected: CPU=(\d+\.?\d*)%, MEM=(\d+\.?\d*)%')
-    process_pattern = re.compile(r'xtop: \[INFO\] Process info: PID=(\d+), Name=(\S+), CPU%=(\d+\.?\d*), MEM%=(\d+\.?\d*), Directory=(\S+)')
+    pattern = re.compile(r'ltop: \[INFO\] Resource spike detected: CPU=(\d+\.?\d*)%, MEM=(\d+\.?\d*)%')
+    process_pattern = re.compile(r'top: \[INFO\] Process info: PID=(\d+), Name=(\S+), CPU%=(\d+\.?\d*), MEM%=(\d+\.?\d*), Directory=(\S+)')
     
     with open(LOG_FILE, 'r') as f:
         lines = f.readlines()
@@ -16,7 +16,7 @@ def filter_logs(cpu_threshold=0, mem_threshold=0):
             cpu_percent = float(match.group(1))
             mem_percent = float(match.group(2))
             if cpu_percent > cpu_threshold or mem_percent > mem_threshold:
-                timestamp = line.split('xtop:')[0].strip()
+                timestamp = line.split('ltop:')[0].strip()
                 print(f'Timestamp: {timestamp}, CPU: {cpu_percent}%, Memory: {mem_percent}%')
                 # Find the corresponding process details
                 index = lines.index(line)
