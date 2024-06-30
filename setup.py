@@ -1,44 +1,49 @@
-from setuptools import setup, find_packages
-from setuptools.command.install import install
 import os
+import subprocess
+from setuptools import setup, find_packages
 
-class PostInstallCommand(install):
-    """Post-installation for installation mode."""
-    def run(self):
-        # Install the systemd service file
-        service_file = os.path.join(os.path.dirname(__file__), 'ltop.service')
-        os.system(f'sudo cp {service_file} /etc/systemd/system/')
-        os.system('sudo systemctl daemon-reload')
-        os.system('sudo systemctl enable ltop.service')
-        install.run(self)
+# Create a virtual environment
+venv_path = '/opt/ltop/venv'
+if not os.path.exists(venv_path):
+    subprocess.check_call(['python3', '-m', 'venv', venv_path])
 
-# Function to read the requirements.txt file
-def read_requirements():
-    with open('requirements.txt') as f:
-        return f.read().splitlines()
+# Install dependencies in the virtual environment
+subprocess.check_call([f'{venv_path}/bin/pip', 'install', '-r', 'requirements.txt'])
+
+# Write the systemd service file
+service_content = """[Unit]
+Description=Ltop System Resource Monitor
+After=network.target
+
+[Service]
+ExecStart=/opt/ltop/venv/bin/python3 -m ltop.ltop
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
+"""
+
+service_path = '/etc/systemd/system/ltop.service'
+with open(service_path, 'w') as service_file:
+    service_file.write(service_content)
+
+# Reload systemd daemon and enable the service
+subprocess.check_call(['systemctl', 'daemon-reload'])
+subprocess.check_call(['systemctl', 'enable', 'ltop.service'])
+subprocess.check_call(['systemctl', 'restart', 'ltop.service'])
+
+with open('requirements.txt') as f:
+    required = f.read().splitlines()
 
 setup(
     name='ltop',
-    version='0.1',
+    version='1.0',
     packages=find_packages(),
-    install_requires=read_requirements(),
+    install_requires=required,
     entry_points={
         'console_scripts': [
-            'ltop-monitor=ltop.ltop:monitor_system',
-            'ltop-log-retention=ltop.log_retention:delete_old_logs',
+            'ltop=ltop.ltop:main',
         ],
-    },
-    author='Priyanshu K',
-    author_email='priyanshu.txt@gmail.com',
-    description='A versatile tool for SREs and DevOps to monitor system resources and log resource utilization.',
-    url='https://github.com/pkdeva/ltop',
-    classifiers=[
-        'Programming Language :: Python :: 3',
-        'License :: OSI Approved :: MIT License',
-        'Operating System :: OS Independent',
-    ],
-    python_requires='>=3.6',
-    cmdclass={
-        'install': PostInstallCommand,
     },
 )
