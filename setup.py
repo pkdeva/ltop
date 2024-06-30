@@ -1,12 +1,16 @@
 from setuptools import setup, find_packages
+from setuptools.command.install import install
 import os
 
-def post_install():
-    # Install the systemd service file
-    service_file = os.path.join(os.path.dirname(__file__), 'ltop.service')
-    os.system(f'sudo cp {service_file} /etc/systemd/system/')
-    os.system('sudo systemctl daemon-reload')
-    os.system('sudo systemctl enable ltop.service')
+class PostInstallCommand(install):
+    """Post-installation for installation mode."""
+    def run(self):
+        # Install the systemd service file
+        service_file = os.path.join(os.path.dirname(__file__), 'ltop.service')
+        os.system(f'sudo cp {service_file} /etc/systemd/system/')
+        os.system('sudo systemctl daemon-reload')
+        os.system('sudo systemctl enable ltop.service')
+        install.run(self)
 
 # Function to read the requirements.txt file
 def read_requirements():
@@ -25,7 +29,6 @@ setup(
         ],
     },
     author='Priyanshu K',
-    twitter="https://twitter.com/pkdevaa",
     author_email='priyanshu.txt@gmail.com',
     description='A versatile tool for SREs and DevOps to monitor system resources and log resource utilization.',
     url='https://github.com/pkdeva/ltop',
@@ -36,6 +39,6 @@ setup(
     ],
     python_requires='>=3.6',
     cmdclass={
-        'install': post_install,
-    }
+        'install': PostInstallCommand,
+    },
 )
