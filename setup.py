@@ -1,17 +1,20 @@
+from setuptools import setup, find_packages
 import os
 import subprocess
-from setuptools import setup, find_packages
+import sys
 
-# Create a virtual environment
-venv_path = '/opt/ltop/venv'
-if not os.path.exists(venv_path):
-    subprocess.check_call(['python3', '-m', 'venv', venv_path])
+# Function to create a virtual environment and install dependencies
+def setup_venv():
+    venv_path = '/opt/ltop/venv'
+    if not os.path.exists(venv_path):
+        subprocess.check_call([sys.executable, '-m', 'venv', venv_path])
+    subprocess.check_call([os.path.join(venv_path, 'bin', 'pip'), 'install', '--upgrade', 'pip'])
+    subprocess.check_call([os.path.join(venv_path, 'bin', 'pip'), 'install', '-r', 'requirements.txt'])
 
-# Install dependencies in the virtual environment
-subprocess.check_call([f'{venv_path}/bin/pip', 'install', '-r', 'requirements.txt'])
-
-# Write the systemd service file
-service_content = """[Unit]
+# Function to set up the systemd service
+def setup_service():
+    service_content = """\
+[Unit]
 Description=Ltop System Resource Monitor
 After=network.target
 
@@ -23,27 +26,28 @@ User=root
 [Install]
 WantedBy=multi-user.target
 """
+    service_path = '/etc/systemd/system/ltop.service'
+    with open(service_path, 'w') as service_file:
+        service_file.write(service_content)
+    subprocess.check_call(['systemctl', 'daemon-reload'])
+    subprocess.check_call(['systemctl', 'enable', 'ltop'])
+    subprocess.check_call(['systemctl', 'start', 'ltop'])
 
-service_path = '/etc/systemd/system/ltop.service'
-with open(service_path, 'w') as service_file:
-    service_file.write(service_content)
+# Call the functions to set up the virtual environment and the service
+setup_venv()
+setup_service()
 
-# Reload systemd daemon and enable the service
-subprocess.check_call(['systemctl', 'daemon-reload'])
-subprocess.check_call(['systemctl', 'enable', 'ltop.service'])
-subprocess.check_call(['systemctl', 'restart', 'ltop.service'])
-
-with open('requirements.txt') as f:
-    required = f.read().splitlines()
-
+# Standard setup function
 setup(
     name='ltop',
-    version='1.0',
+    version='0.1',
     packages=find_packages(),
-    install_requires=required,
+    install_requires=[
+        'psutil',
+    ],
     entry_points={
         'console_scripts': [
-            'ltop=ltop.ltop:main',
+            'ltop = ltop.ltop:main',
         ],
     },
 )
