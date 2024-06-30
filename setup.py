@@ -6,29 +6,48 @@ import sys
 # Function to create a virtual environment and install dependencies
 def setup_venv():
     venv_path = '/opt/ltop/venv'
-    if not os.path.exists(venv_path):
-        subprocess.check_call([sys.executable, '-m', 'venv', venv_path])
-    subprocess.check_call([os.path.join(venv_path, 'bin', 'pip'), 'install', '--upgrade', 'pip'])
-    subprocess.check_call([os.path.join(venv_path, 'bin', 'pip'), 'install', '-r', 'requirements.txt'])
+    python_executable = sys.executable  # Use the current Python executable
 
-# Function to set up the systemd service
+    # Check if venv module is available; install if not
+    try:
+        subprocess.check_call([python_executable, '-m', 'venv', '--help'])
+    except subprocess.CalledProcessError:
+        install_venv()
+
+    # Create virtual environment
+    subprocess.check_call([python_executable, '-m', 'venv', venv_path])
+
+    # Activate virtual environment and install dependencies
+    activate_script = os.path.join(venv_path, 'bin', 'activate')
+    subprocess.check_call(['bash', '-c', f'source {activate_script} && python -m ensurepip'])
+    subprocess.check_call(['bash', '-c', f'source {activate_script} && pip install --upgrade pip'])
+    subprocess.check_call(['bash', '-c', f'source {activate_script} && pip install -r requirements.txt'])
+
+# Function to install python3-venv package if venv is not available
+def install_venv():
+    package_manager = None
+    if os.path.exists('/usr/bin/apt'):
+        package_manager = 'apt'
+    elif os.path.exists('/usr/bin/yum'):
+        package_manager = 'yum'
+    elif os.path.exists('/usr/bin/dnf'):
+        package_manager = 'dnf'
+    else:
+        raise RuntimeError("Unsupported package manager")
+
+    try:
+        subprocess.check_call([package_manager, 'install', 'python3-venv'])
+    except subprocess.CalledProcessError:
+        raise RuntimeError(f"Failed to install python3-venv using {package_manager}")
+
+    # Retry creating the virtual environment
+    subprocess.check_call([sys.executable, '-m', 'venv', '/opt/ltop/venv'])
+
+# Function to copy the systemd service file to the correct location
 def setup_service():
-    service_content = """\
-[Unit]
-Description=Ltop System Resource Monitor
-After=network.target
-
-[Service]
-ExecStart=/opt/ltop/venv/bin/python3 -m ltop.ltop
-Restart=always
-User=root
-
-[Install]
-WantedBy=multi-user.target
-"""
-    service_path = '/etc/systemd/system/ltop.service'
-    with open(service_path, 'w') as service_file:
-        service_file.write(service_content)
+    service_src = 'ltop.service'
+    service_dest = '/etc/systemd/system/ltop.service'
+    subprocess.check_call(['cp', service_src, service_dest])
     subprocess.check_call(['systemctl', 'daemon-reload'])
     subprocess.check_call(['systemctl', 'enable', 'ltop'])
     subprocess.check_call(['systemctl', 'start', 'ltop'])
