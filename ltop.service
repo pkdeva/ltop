@@ -3,7 +3,7 @@ Description=Ltop System Resource Monitor
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/python3 -m ltop.ltop
+ExecStart=/opt/ltop/venv/bin/python3 -m ltop.ltop
 Restart=always
 User=root
 
